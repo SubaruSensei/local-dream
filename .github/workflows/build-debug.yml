@@ -59,10 +59,21 @@ jobs:
             yes | "$SDKMANAGER" --install "ndk;$v" 2>&1 | tail -n 2 || true
           done
 
+      - name: Generate CI keystore
+        run: |
+          keytool -genkeypair -v -keystore app/keystore.jks -alias localdream \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass localdream123 -keypass localdream123 \
+            -dname "CN=LocalDream CI, OU=Dev, O=Dev, L=Dev, S=Dev, C=US"
+
       - name: Gradle build
         run: |
           chmod +x gradlew
-          ./gradlew :app:assembleDebug --no-daemon --stacktrace
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace \
+            -PRELEASE_STORE_FILE=keystore.jks \
+            -PRELEASE_STORE_PASSWORD=localdream123 \
+            -PRELEASE_KEY_ALIAS=localdream \
+            -PRELEASE_KEY_PASSWORD=localdream123
 
       - uses: actions/upload-artifact@v4
         if: always()
