@@ -79,5 +79,5 @@ jobs:
         if: always()
         with:
           name: local-dream-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/**/*.apk
           if-no-files-found: warn
