@@ -628,6 +628,20 @@ class BackendService : Service() {
             val systemLibPathsStr = systemLibPaths.joinToString(":")
             env["LD_LIBRARY_PATH"] = systemLibPathsStr
             env["DSP_LIBRARY_PATH"] = runtimeDir.absolutePath
+            // QNN HTP needs ADSP_LIBRARY_PATH on every DSP-backed backend,
+            // not just DiT. FastRPC resolves skels by bare name, so the
+            // runtime directory AND the vendor defaults must be on the path.
+            // ';' is the separator FastRPC expects for ADSP_LIBRARY_PATH.
+            run {
+                val qnnDspPath = listOf(
+                    runtimeDir.absolutePath,
+                    "/vendor/lib/rfsa/adsp",
+                    "/vendor/dsp/cdsp",
+                    "/dsp",
+                ).joinToString(";")
+                env["ADSP_LIBRARY_PATH"] = qnnDspPath
+                env["DSP_LIBRARY_PATH"] = qnnDspPath
+            }
             if (ditEngineDir != null) {
                 // ggml-hexagon asks FastRPC for its skel by bare name, so both
                 // the runtime directory holding the skels and the platform
