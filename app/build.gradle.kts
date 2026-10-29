@@ -44,11 +44,6 @@ android {
         ndk {
             //noinspection ChromeOsAbiSupport
             abiFilters += "arm64-v8a"
-            }
-            externalNativeBuild {
-                cmake {
-                    cppFlags += ""
-                }
         }
     }
 
@@ -86,12 +81,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
     }
     buildFeatures {
         compose = true
