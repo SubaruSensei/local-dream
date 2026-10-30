@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class BackendService : Service() {
+    private var ggmlProxy: GgmlProxy? = null
     @Volatile
     private var process: Process? = null
 
@@ -498,7 +499,17 @@ class BackendService : Service() {
             // requirement changes instead of reusing a mismatched one.
             val listenOnAll = config.listenOnAll
 
-            val command = if (backendType == BACKEND_TYPE_UPSCALER) {
+            var command = if (backendType == "sd15ggml") {
+                ggmlProxy?.stop()
+                ggmlProxy = GgmlProxy().apply { start() }
+                val ggufFile = File(modelsDir, "model.gguf")
+                mutableListOf(
+                    File(applicationInfo.nativeLibraryDir, "libsd_server.so").absolutePath,
+                    "-m", ggufFile.absolutePath,
+                    "--backend", "vulkan0",
+                    "-p", "8082"
+                )
+            } else if (backendType == BACKEND_TYPE_UPSCALER) {
                 // Same invocation as the standalone upscale screen's private
                 // process; run through this service so host mode gets the
                 // usual reconcile/stop-grace lifecycle and --listen_all.
@@ -729,6 +740,8 @@ class BackendService : Service() {
     private fun isLiveCrash(proc: Process): Boolean = !stopping && process === proc
 
     override fun onDestroy() {
+        ggmlProxy?.stop()
+        super.onDestroy()
         super.onDestroy()
         // The scope is never cancelled, so this job still runs after
         // onDestroy returns; closing the dispatcher afterwards lets its
